@@ -26,7 +26,7 @@ jobs:
       - name: Package & S3 upload
         run: |
           SHORT_SHA="${GITHUB_SHA::7}"
-          sed -i "s|배포 버전: [^<]*|배포 버전: ${SHORT_SHA}|g" index.html || true
+          sed -i "s|배포 버전: [^<]*|배포 버전: ${SHORT_SHA}|g" frontend/index.html || true
           zip -r deploy-${GITHUB_SHA}.zip . --exclude '*.git*' --exclude '.github/*'
           aws s3 cp deploy-${GITHUB_SHA}.zip s3://${S3_BUCKET}/releases/deploy-${GITHUB_SHA}.zip
           aws s3 cp deploy-${GITHUB_SHA}.zip s3://${S3_BUCKET}/releases/deploy-latest.zip
@@ -48,10 +48,10 @@ jobs:
             CMD=$(aws ssm send-command --instance-ids $IID \
               --document-name AWS-RunShellScript \
               --parameters 'commands=[
-                aws s3 cp s3://${S3_BUCKET}/releases/deploy-latest.zip /tmp/d.zip,
-                unzip -o /tmp/d.zip -d ${DEPLOY_DIR},
+                aws s3 cp s3://'${S3_BUCKET}'/releases/deploy-latest.zip /tmp/d.zip,
+                unzip -o /tmp/d.zip -d '${DEPLOY_DIR}',
                 nginx -t && systemctl reload nginx,
-                curl -sf http://localhost/health]' \
+                curl -sf http://localhost]' \
               --timeout-seconds 300 \
               --query Command.CommandId --output text)
             for i in $(seq 1 30); do
@@ -64,3 +64,4 @@ jobs:
             done
             echo "✅ $IID 완료"
           done
+
